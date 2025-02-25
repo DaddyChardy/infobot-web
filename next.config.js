@@ -5,7 +5,8 @@ const nextConfig = {
     },
     webpack: (config, { isServer }) => {
       // Add .mjs extension to the resolver
-      config.resolve.extensions.push('.mjs');
+      config.resolve.extensions.push('.mjs'), // Google user images
+      'deped.depedtandagn8n.shop'
   
       // Process .mjs files as javascript/auto so they are properly parsed
       config.module.rules.push({

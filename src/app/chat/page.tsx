@@ -159,15 +159,21 @@ export default function ChatPage() {
           {!currentChatId ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center px-4">
               <div className="w-16 h-16 bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20 mb-6">
-                <img src="/infobot.png" alt="Infobot" className="h-8 w-8" />
+                <Image 
+                  src="/infobot.png" 
+                  alt="Infobot" 
+                  width={32}
+                  height={32}
+                  className="h-8 w-8"
+                />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
                 Welcome to the DepEd <br /> Tandag City Division Infobot! 🌟
               </h2>
               <p className="text-gray-500 mb-8 max-w-md">
-                "Hello there! I’m INFOBOT, your official DepEd Tandag City Division
+                &quot;Hello there! I’m INFOBOT, your official DepEd Tandag City Division
                 chatbot. I’m here to help you with enrollment details, class
-                schedules, policies, and the latest updates. How can I assist you today?"
+                schedules, policies, and the latest updates. How can I assist you today?&quot;
               </p>
               <button
                 onClick={handleNewChat}
@@ -193,7 +199,7 @@ export default function ChatPage() {
               <div className="flex-1 p-4 overflow-y-auto relative">
                 {/* Background Image */}
                 <div
-                  className="absolute inset-0 bg-no-repeat bg-center opacity-50"
+                  className="absolute inset-0 bg-no-repeat bg-center opacity-10"
                   style={{
                     backgroundImage: "url('/icon-512x512.png')",
                     backgroundSize: "400px",
@@ -210,9 +216,11 @@ export default function ChatPage() {
                       }`}
                     >
                       {!isUser && (
-                        <img
+                        <Image
                           src="/infobot.png"
                           alt="Infobot"
+                          width={32}
+                          height={32}
                           className="w-8 h-8 mr-2"
                         />
                       )}
@@ -234,24 +242,31 @@ export default function ChatPage() {
                           </button>
                         </div>
                       </div>
-                      {isUser &&
-                        (session?.user?.image ? (
-                          <img
-                            src={session.user.image}
-                            alt="User"
-                            className="w-8 h-8 rounded-full ml-2"
-                          />
-                        ) : (
-                          <i className="fas fa-user text-2xl text-gray-500 ml-2" />
-                        ))}
+                      {isUser && (
+                        <div className="ml-2">
+                          {session?.user?.image ? (
+                            <Image
+                              src={session.user.image}
+                              alt="User Profile"
+                              width={32}
+                              height={32}
+                              className="w-8 h-8 rounded-full"
+                            />
+                          ) : (
+                            <i className="fas fa-user text-2xl text-gray-500" />
+                          )}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
                 {botTyping && (
                   <div className="mb-3 flex items-end justify-start">
-                    <img
+                    <Image
                       src="/infobot.png"
                       alt="Infobot"
+                      width={32}
+                      height={32}
                       className="w-8 h-8 mr-2"
                     />
                     <div className="relative max-w-[70%] px-4 py-2 rounded-lg text-sm shadow bg-gray-200 text-gray-800 rounded-bl-none">
