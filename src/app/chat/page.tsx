@@ -1,4 +1,3 @@
-// File: src/app/chat/page.tsx
 "use client";
 
 import { useSession } from "next-auth/react";
@@ -141,7 +140,6 @@ export default function ChatPage() {
   // Select a chat
   const handleSelectChat = (id: string) => {
     setCurrentChatId(id);
-    // onSnapshot will load messages
   };
 
   // Delete a chat (and its messages)

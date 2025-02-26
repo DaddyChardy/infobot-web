@@ -1,4 +1,3 @@
-// File: src/components/AppearanceSettingsModal.tsx
 "use client";
 
 import React from "react";
@@ -8,7 +7,6 @@ interface AppearanceSettingsModalProps {
   onClose: () => void;
   onThemeChange: (theme: string) => void;
   onFontChange: (font: string) => void;
-  // Removed onLanguageChange since it’s not used
 }
 
 export default function AppearanceSettingsModal({
@@ -25,8 +23,6 @@ export default function AppearanceSettingsModal({
         <h2 className="text-xl font-bold text-gray-800 mb-4">
           Chat &amp; Appearance Settings
         </h2>
-
-        {/* Theme Selection */}
         <div className="mb-4">
           <h3 className="text-lg font-semibold text-gray-700 mb-2">
             Theme Selection
@@ -52,8 +48,6 @@ export default function AppearanceSettingsModal({
             </button>
           </div>
         </div>
-
-        {/* Font Size / Style */}
         <div className="mb-4">
           <h3 className="text-lg font-semibold text-gray-700 mb-2">
             Font Size / Style
@@ -79,7 +73,6 @@ export default function AppearanceSettingsModal({
             </button>
           </div>
         </div>
-
         <div className="flex justify-end">
           <button
             onClick={onClose}
