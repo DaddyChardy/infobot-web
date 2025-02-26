@@ -1,3 +1,4 @@
+// File: src/app/chat/page.tsx
 "use client";
 
 import { useSession } from "next-auth/react";
@@ -42,6 +43,15 @@ function TypingIndicator() {
       <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" />
     </div>
   );
+}
+
+// Disable unused-vars rule for formatTime if ESLint complains
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function formatTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 export default function ChatPage() {
@@ -160,13 +170,6 @@ export default function ChatPage() {
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text).catch((err) => {
       console.error("Failed to copy text:", err);
-    });
-  };
-
-  const formatTime = (iso: string): string => {
-    return new Date(iso).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
     });
   };
 
@@ -419,11 +422,4 @@ export default function ChatPage() {
       </div>
     </div>
   );
-}
-
-function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }
