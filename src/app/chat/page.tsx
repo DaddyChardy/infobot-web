@@ -1,3 +1,4 @@
+// File: src/app/chat/page.tsx
 "use client";
 
 import { useSession } from "next-auth/react";
@@ -290,8 +291,9 @@ export default function ChatPage() {
                 Welcome to the DepEd <br /> Tandag City Division Infobot! 🌟
               </h2>
               <p className="text-gray-500 mb-8 max-w-md">
-                Hello there! I'm INFOBOT, your official DepEd Tandag City Division
-                chatbot. I'm here to help you!! </p>
+                Hello there! I&apos;m INFOBOT, your official DepEd Tandag City Division
+                chatbot. I&apos;m here to help you!!
+              </p>
               <button
                 onClick={handleNewChat}
                 className="flex items-center gap-2 px-6 py-3 bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-600 hover:via-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg shadow-blue-500/20 font-medium"
@@ -322,7 +324,7 @@ export default function ChatPage() {
                     backgroundSize: "400px",
                   }}
                 />
-                {messages.map((msg, index) => {
+                {messages.map((msg) => {
                   const isUser = msg.sender === "user";
                   return (
                     <div
@@ -360,7 +362,7 @@ export default function ChatPage() {
                         </div>
                       </div>
                       {/* User icon */}
-                      {session?.user?.image && (
+                      {isUser && session?.user?.image && (
                         <Image
                           src={session.user.image}
                           alt="User"
@@ -389,31 +391,30 @@ export default function ChatPage() {
                 <div ref={messagesEndRef} />
               </div>
 
-              <footer className="bg-transparent p-5 flex items-center space-x-5 w-300 h-11">
-  <input
-    type="text"
-    className="flex-1 px-5 py-2 rounded-full border border-gray-300 focus:outline-none bg-transparent"
-    placeholder="Ask anything..."
-    value={input}
-    onChange={(e) => setInput(e.target.value)}
-    onKeyDown={(e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        handleSendMessage();
-      }
-    }}
-  />
-  <button
-    onClick={handleSendMessage}
-    className="px-4 py-2 bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 text-white rounded-full hover:from-blue-600 hover:via-blue-700 hover:to-purple-700 transition"
-  >
-    Send
-  </button>
-</footer>
-<div className="text-center text-xs text-gray-500 py-2 bg-transparent">
-  Infobot can make mistakes. Check important info.
-</div>
-    
+              <footer className="bg-transparent p-5 flex items-center space-x-5">
+                <input
+                  type="text"
+                  className="flex-1 px-5 py-2 rounded-full border border-gray-300 focus:outline-none bg-transparent"
+                  placeholder="Ask anything..."
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
+                />
+                <button
+                  onClick={handleSendMessage}
+                  className="px-4 py-2 bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 text-white rounded-full hover:from-blue-600 hover:via-blue-700 hover:to-purple-700 transition"
+                >
+                  Send
+                </button>
+              </footer>
+              <div className="text-center text-xs text-gray-500 py-2 bg-transparent">
+                Infobot can make mistakes. Check important info.
+              </div>
             </>
           )}
         </div>
