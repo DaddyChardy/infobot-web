@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Providers from "../components/Providers";
 import "./globals.css";
+import Head from 'next/head';
+import { Analytics } from "@vercel/analytics/react";
 
 export const metadata: Metadata = {
-  title: "Infobot Webapp",
+  title: "Infobot Web App",
   description: "Your Infobot web application",
 };
 
@@ -14,7 +16,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-         <head>
+      <Head>
+        <link rel="icon" href="/infobot.png" />
         {/* Font Awesome CDN */}
         <link
           rel="stylesheet"
@@ -23,7 +26,7 @@ export default function RootLayout({
           crossOrigin="anonymous"
           referrerPolicy="no-referrer"
         />
-      </head>
+      </Head>
       <body
         className="min-h-screen w-full text-gray-900"
         style={{
@@ -36,6 +39,7 @@ export default function RootLayout({
         <Providers>
           {children}
         </Providers>
+        <Analytics />
       </body>
     </html>
   );

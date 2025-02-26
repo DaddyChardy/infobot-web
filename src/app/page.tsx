@@ -1,74 +1,68 @@
+// File: src/app/login/page.tsx
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import Image from "next/image";
 
-export default function Home() {
+export default function LoginPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [loadingDone, setLoadingDone] = useState(false);
 
+  // If user is logged in, redirect to chat
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoadingDone(true);
-      if (status !== "loading" && !session) {
-        router.push("/login");
-      }
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, [session, status, router]);
+    if (session) {
+      router.push("/chat");
+    }
+  }, [session, router]);
 
-  // While NextAuth is loading or the 3-second timer hasn't finished, show the loading effect.
-  if (status === "loading" || !loadingDone) {
+  // Loading effect (3 seconds)
+  if (status === "loading") {
     return (
-      <div
-        className="relative w-screen h-screen flex items-center justify-center"
-        style={{
-          background:
-            "linear-gradient(45deg, #7F00FF 0%, #6000ED 25%, #4000C0 50%, #000080 75%, #000051 100%)",
-        }}
-      >
-        <div className="relative w-[250px] h-[250px] rounded-2xl bg-white/20 backdrop-blur-lg border border-white/10 overflow-hidden flex items-center justify-center shadow-2xl">
-          <img
-            src="/animation.gif"
-            alt="Animation"
-            className="w-full h-full object-contain"
-          />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <img
-              src="/icon-512x512.png"
-              alt="DepEd Logo"
-              className="w-16 h-16 animate-pulse"
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="w-24 h-24 rounded-full bg-gray-200 animate-pulse" />
+      </div>
+    );
+  }
+
+  if (!session) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 to-white">
+        <div className="w-full max-w-md p-8 rounded-2xl bg-white/70 backdrop-blur-md border border-gray-200 shadow-xl text-center">
+          <div className="mb-6 flex justify-center">
+            <Image
+              src="/infobot.png"
+              alt="Infobot Logo"
+              width={80}
+              height={80}
+              className="rounded-full"
+              priority
             />
           </div>
+          <h1 className="text-3xl font-bold text-gray-800 mb-4">
+            Welcome to DepEd Infobot
+          </h1>
+          <p className="text-gray-600 mb-8">
+            Log in to access division resources, announcements, and more.
+          </p>
+          <button
+            onClick={() => signIn("google")}
+            className="w-full flex items-center justify-center px-6 py-3 bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-600 hover:via-blue-700 hover:to-purple-700 transition"
+          >
+            <Image
+              src="/google.png"
+              alt="Google Icon"
+              width={20}
+              height={20}
+              className="mr-2"
+            />
+            Sign in with Google
+          </button>
         </div>
       </div>
     );
   }
 
-  if (!session) return null;
-
-  // When session exists, display the Home page content.
-  return (
-    <div
-      className="min-h-screen flex items-center justify-center"
-      style={{
-        background:
-          "linear-gradient(45deg, #7F00FF 0%, #6000ED 25%, #4000C0 50%, #000080 75%, #000051 100%)",
-      }}
-    >
-      <div className="w-full max-w-lg p-8 rounded-2xl bg-white/20 backdrop-blur-lg border border-white/10 shadow-2xl text-center">
-        <h1 className="text-3xl font-bold text-white mb-4">
-          Welcome, {session.user?.name}!
-        </h1>
-        <button
-          onClick={() => signOut()}
-          className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
-        >
-          Sign Out
-        </button>
-      </div>
-    </div>
-  );
+  return null;
 }
