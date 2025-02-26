@@ -137,7 +137,7 @@ export default function Header() {
         onClose={handleCloseAppearanceModal}
         onThemeChange={(theme) => console.log("Theme changed to:", theme)}
         onFontChange={(font) => console.log("Font changed to:", font)}
-        onLanguageChange={(lang) => console.log("Language changed to:", lang)}
+       
       />
 
       {/* Contact Us Modal */}

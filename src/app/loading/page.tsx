@@ -13,11 +13,8 @@ export default function LoadingPage() {
       }}
     >
       <div className="relative w-[250px] h-[250px] rounded-2xl bg-white/20 backdrop-blur-lg border border-white/10 overflow-hidden flex items-center justify-center shadow-2xl">
-        <img
-          src="/animation.gif"
-          alt="Animation"
-          className="w-full h-full object-contain"
-        />
+      <Image src="/animation.gif" alt="Animation" width={250} height={250} className="object-contain" />
+
         <div className="absolute inset-0 flex items-center justify-center">
           <Image
             src="/icon-512x512.png"

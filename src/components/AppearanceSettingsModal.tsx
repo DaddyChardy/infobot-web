@@ -8,7 +8,7 @@ interface AppearanceSettingsModalProps {
   onClose: () => void;
   onThemeChange: (theme: string) => void;
   onFontChange: (font: string) => void;
-  onLanguageChange: (language: string) => void;
+  // Removed onLanguageChange since it’s not used
 }
 
 export default function AppearanceSettingsModal({
@@ -16,7 +16,6 @@ export default function AppearanceSettingsModal({
   onClose,
   onThemeChange,
   onFontChange,
-  onLanguageChange,
 }: AppearanceSettingsModalProps) {
   if (!isOpen) return null;
 
@@ -24,8 +23,10 @@ export default function AppearanceSettingsModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
       <div className="bg-white/20 backdrop-blur-md border border-white/10 shadow-xl rounded-xl p-6 w-96">
         <h2 className="text-xl font-bold text-gray-800 mb-4">
-          Chat & Appearance Settings
+          Chat &amp; Appearance Settings
         </h2>
+
+        {/* Theme Selection */}
         <div className="mb-4">
           <h3 className="text-lg font-semibold text-gray-700 mb-2">
             Theme Selection
@@ -44,13 +45,15 @@ export default function AppearanceSettingsModal({
               Dark
             </button>
             <button
-              onClick={() => onThemeChange("glassmorphic")}
+              onClick={() => onThemeChange("glass")}
               className="flex-1 px-3 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition active:scale-95"
             >
               Glass
             </button>
           </div>
         </div>
+
+        {/* Font Size / Style */}
         <div className="mb-4">
           <h3 className="text-lg font-semibold text-gray-700 mb-2">
             Font Size / Style
@@ -76,16 +79,11 @@ export default function AppearanceSettingsModal({
             </button>
           </div>
         </div>
-        <div className="mb-4">
-          <h3 className="text-lg font-semibold text-gray-700 mb-2">
-            Language Settings
-          </h3>
-          
-        </div>
+
         <div className="flex justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-gray-400 text-white rounded-md hover:bg-gray-500 transition active:scale-95"
+            className="px-6 py-3 bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-600 hover:via-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg shadow-blue-500/20 font-medium active:scale-95"
           >
             Close
           </button>
