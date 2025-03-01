@@ -7,6 +7,7 @@ import { useState, useEffect, useRef } from "react";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import Image from "next/image";
+import ReactMarkdown from "react-markdown";
 import {
   collection,
   query,
@@ -45,15 +46,6 @@ function TypingIndicator() {
   );
 }
 
-// Disable unused-vars rule for formatTime if ESLint complains
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
 export default function ChatPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -76,12 +68,7 @@ export default function ChatPage() {
   // Real-time listener for chats
   useEffect(() => {
     if (session?.user?.email) {
-      const chatsRef = collection(
-        db,
-        "users",
-        session.user.email,
-        "chats"
-      );
+      const chatsRef = collection(db, "users", session.user.email, "chats");
       const q = query(chatsRef, orderBy("createdAt", "desc"));
       const unsubscribe = onSnapshot(q, (snapshot) => {
         const loadedChats: Chat[] = snapshot.docs.map((docSnap) => {
@@ -212,7 +199,7 @@ export default function ChatPage() {
       const botReply = await fetchBotReply(userMsg.content);
       const botMsg: Message = {
         id: Date.now().toString() + "_bot",
-        content: botReply,
+        content: botReply, // This will be Markdown formatted
         sender: "bot",
         time: new Date().toISOString(),
       };
@@ -351,7 +338,22 @@ export default function ChatPage() {
                             : "bg-gray-200 text-gray-800 rounded-bl-none"
                         }`}
                       >
-                        <p>{msg.content}</p>
+                     {isUser ? (
+  <p>{msg.content}</p>
+) : (
+  <ReactMarkdown
+    components={{
+      a: ({ ...props }) => (
+        <a {...props} className="text-blue-600 uppercase hover:underline" />
+      ),
+      p: ({ ...props }) => <p className="mb-2" {...props} />,
+    }}
+  >
+    {msg.content}
+  </ReactMarkdown>
+)}
+
+
                         <div className="absolute -bottom-5 flex items-center gap-1 text-xs text-gray-500">
                           <span>{formatTime(msg.time)}</span>
                           <button
@@ -422,4 +424,11 @@ export default function ChatPage() {
       </div>
     </div>
   );
+}
+
+function formatTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
