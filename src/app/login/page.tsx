@@ -1,6 +1,5 @@
 // File: src/app/login/page.tsx
 "use client";
-/* eslint-disable @next/next/no-img-element */
 
 import { signIn, useSession } from "next-auth/react";
 import { useEffect } from "react";
@@ -53,7 +52,13 @@ export default function LoginPage() {
           onClick={() => signIn("google")}
           className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 text-white rounded-md hover:from-blue-600 hover:via-blue-700 hover:to-purple-700 transition active:scale-95"
         >
-          <Image src="/google.png" alt="Google icon" className="w-5 h-5 mr-2" />
+          <Image
+            src="/google.png"
+            alt="Google icon"
+            width={20}
+            height={20}
+            className="w-5 h-5 mr-2"
+          />
           Sign in with Google
         </button>
       </div>

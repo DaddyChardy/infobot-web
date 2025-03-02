@@ -8,6 +8,7 @@ import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
+import FeedbackWidget from "@/components/FeedbackWidget";
 import {
   collection,
   query,
@@ -46,6 +47,8 @@ function TypingIndicator() {
   );
 }
 
+
+
 export default function ChatPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -58,14 +61,12 @@ export default function ChatPage() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Redirect if unauthenticated
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/login");
     }
   }, [status, router]);
 
-  // Real-time listener for chats
   useEffect(() => {
     if (session?.user?.email) {
       const chatsRef = collection(db, "users", session.user.email, "chats");
@@ -85,7 +86,6 @@ export default function ChatPage() {
     }
   }, [session]);
 
-  // Real-time listener for messages in selected chat
   useEffect(() => {
     if (currentChatId && session?.user?.email) {
       const messagesRef = collection(
@@ -115,12 +115,10 @@ export default function ChatPage() {
     }
   }, [currentChatId, session]);
 
-  // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, botTyping]);
 
-  // Create new chat
   const handleNewChat = async () => {
     if (!session?.user?.email) return;
     const userEmail = session.user.email;
@@ -134,12 +132,10 @@ export default function ChatPage() {
     }
   };
 
-  // Select a chat
   const handleSelectChat = (id: string) => {
     setCurrentChatId(id);
   };
 
-  // Delete a chat (and its messages)
   const handleDeleteChat = async (id: string) => {
     if (!session?.user?.email) return;
     try {
@@ -153,53 +149,49 @@ export default function ChatPage() {
     }
   };
 
-  // Copy text to clipboard
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text).catch((err) => {
+  const handleCopy = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (err) {
       console.error("Failed to copy text:", err);
-    });
+    }
   };
 
-  // Send message and update chat title if needed
   const handleSendMessage = async () => {
     if (!input.trim() || !currentChatId || !session?.user?.email) return;
     const userEmail = session.user.email;
 
-    // If chat title is "New Chat", rename it
-    const currentChat = chats.find((chat) => chat.id === currentChatId);
-    if (currentChat && currentChat.title === "New Chat") {
-      const updatedTitle =
-        input.trim().length > 20 ? input.trim().slice(0, 20) + "..." : input.trim();
-      try {
-        await updateChatTitle(userEmail, currentChatId, updatedTitle);
-      } catch (err) {
-        console.error("Error updating chat title:", err);
-      }
-    }
-
-    const userMsg: Message = {
-      id: Date.now().toString(),
-      content: input.trim(),
-      sender: "user",
-      time: new Date().toISOString(),
-    };
-    setMessages((prev) => [...prev, userMsg]);
-    setInput("");
-    setBotTyping(true);
-
     try {
+      const currentChat = chats.find((chat) => chat.id === currentChatId);
+      if (currentChat && currentChat.title === "New Chat") {
+        const updatedTitle =
+          input.trim().slice(0, 20) + (input.trim().length > 20 ? "..." : "");
+        await updateChatTitle(userEmail, currentChatId, updatedTitle);
+      }
+
+      const userMsg: Message = {
+        id: Date.now().toString(),
+        content: input.trim(),
+        sender: "user",
+        time: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, userMsg]);
+      setInput("");
+      setBotTyping(true);
+
       await addMessage(
         userEmail,
         currentChatId,
         userMsg.content,
         userMsg.sender,
         userMsg.time,
-        session?.user?.image || undefined
+        session.user.image ?? "/default-image.png"
       );
+
       const botReply = await fetchBotReply(userMsg.content);
       const botMsg: Message = {
         id: Date.now().toString() + "_bot",
-        content: botReply, // This will be Markdown formatted
+        content: botReply,
         sender: "bot",
         time: new Date().toISOString(),
       };
@@ -216,7 +208,7 @@ export default function ChatPage() {
       console.error("Error sending message:", error);
       const errorMsg: Message = {
         id: Date.now().toString() + "_err",
-        content: "Error: Unable to get response",
+        content: "⚠️ Unable to process your request. Please try again.",
         sender: "bot",
         time: new Date().toISOString(),
       };
@@ -247,12 +239,8 @@ export default function ChatPage() {
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
-      {/* Top Header */}
       <Header />
-
-      {/* Row layout: Sidebar on left, chat on right */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
         <Sidebar
           chats={chats}
           onNewChat={handleNewChat}
@@ -260,10 +248,8 @@ export default function ChatPage() {
           onDeleteChat={handleDeleteChat}
         />
 
-        {/* Chat area */}
         <div className="flex-1 flex flex-col bg-transparent relative">
           {!currentChatId ? (
-            // Welcome Screen
             <div className="flex-1 flex flex-col items-center justify-center text-center px-4">
               <div className="w-16 h-16 bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20 mb-6">
                 <Image
@@ -302,7 +288,6 @@ export default function ChatPage() {
               </button>
             </div>
           ) : (
-            // Active Chat UI
             <>
               <div className="flex-1 p-4 overflow-y-auto relative">
                 <div
@@ -321,7 +306,6 @@ export default function ChatPage() {
                         isUser ? "justify-end" : "justify-start"
                       }`}
                     >
-                      {/* Bot icon */}
                       {!isUser && (
                         <Image
                           src="/infobot.png"
@@ -335,10 +319,10 @@ export default function ChatPage() {
                         className={`relative max-w-[70%] px-4 py-2 rounded-lg text-sm shadow ${
                           isUser
                             ? "bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 text-white rounded-br-none"
-                            : "bg-gray-200 text-gray-800 rounded-bl-none"
+                            : "bg-gray-200 text-gray-800 rounded-bl-none mt-4 "
                         }`}
                       >
-                     {isUser ? (
+                        {isUser ? (
   <p>{msg.content}</p>
 ) : (
   <ReactMarkdown
@@ -347,24 +331,41 @@ export default function ChatPage() {
         <a {...props} className="text-blue-600 uppercase hover:underline" />
       ),
       p: ({ ...props }) => <p className="mb-2" {...props} />,
+      ul: ({ ...props }) => <ul className="list-disc list-inside mb-2" {...props} />,
+      ol: ({ ...props }) => <ol className="list-decimal list-inside mb-2" {...props} />,
+      li: ({ ...props }) => <li className="mb-1" {...props} />,
     }}
   >
     {msg.content}
   </ReactMarkdown>
 )}
 
-
                         <div className="absolute -bottom-5 flex items-center gap-1 text-xs text-gray-500">
                           <span>{formatTime(msg.time)}</span>
                           <button
                             onClick={() => handleCopy(msg.content)}
-                            className="hover:text-gray-700 transition"
+                            className="group relative hover:text-blue-500 transition-transform transform hover:scale-110"
                           >
-                            <i className="fas fa-copy" />
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-4 w-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                              />
+                            </svg>
+                            <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                              {isUser ? "Copy prompt" : "Copy response"}
+                            </span>
                           </button>
                         </div>
                       </div>
-                      {/* User icon */}
                       {isUser && session?.user?.image && (
                         <Image
                           src={session.user.image}
@@ -420,15 +421,19 @@ export default function ChatPage() {
               </div>
             </>
           )}
+         <FeedbackWidget />
         </div>
       </div>
     </div>
+    
   );
 }
+
 
 function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString([], {
     hour: "2-digit",
     minute: "2-digit",
   });
+
 }

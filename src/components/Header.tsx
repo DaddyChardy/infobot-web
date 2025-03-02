@@ -4,73 +4,58 @@
 import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+
 import UserDropdownMenu from "./UserDropdownMenu";
-import ConfirmDeleteAllChatsModal from "./ConfirmDeleteAllChatsModal";
 import AppearanceSettingsModal from "./AppearanceSettingsModal";
 import ContactUsModal from "./ContactUsModal";
-import { deleteAllChats } from "@/services/chatService";
+import GradientText from "./GradientText"; // Import the gradient text component
 
 export default function Header() {
   const { data: session } = useSession();
-  const router = useRouter();
-
+ 
   const [showMenu, setShowMenu] = useState(false);
-  const [showConfirmDeleteAll, setShowConfirmDeleteAll] = useState(false);
-
-  // For the appearance settings modal
   const [showAppearanceModal, setShowAppearanceModal] = useState(false);
-
-  // For the contact us modal
   const [showContactModal, setShowContactModal] = useState(false);
 
-  const toggleMenu = () => setShowMenu(!showMenu);
+  const toggleMenu = () => setShowMenu((prev) => !prev);
   const closeMenu = () => setShowMenu(false);
 
-  // "Delete all chats" -> open confirm modal
-  const handleDeleteAllChats = () => {
-    setShowConfirmDeleteAll(true);
-  };
-
-  // Called when user confirms deletion
-  const handleConfirmDeleteAll = async () => {
-    if (!session?.user?.email) return;
-    try {
-      await deleteAllChats(session.user.email);
-      console.log("All chats deleted");
-      // Optionally redirect to /chat to reset to default
-      router.push("/chat");
-    } catch (err) {
-      console.error("Error deleting all chats:", err);
-    } finally {
-      setShowConfirmDeleteAll(false);
-    }
-  };
-
-  const handleCancelDeleteAll = () => {
-    setShowConfirmDeleteAll(false);
-  };
-
-  // "Settings" -> open appearance modal
-  const handleSettings = () => {
+  const openAppearanceModal = () => {
     setShowAppearanceModal(true);
+    closeMenu();
   };
-  const handleCloseAppearanceModal = () => {
-    setShowAppearanceModal(false);
-  };
+  const closeAppearanceModal = () => setShowAppearanceModal(false);
 
-  // "Contact us" -> open contact modal
-  const handleContactUs = () => {
+  const openContactModal = () => {
     setShowContactModal(true);
+    closeMenu();
   };
-  const handleCloseContactModal = () => {
-    setShowContactModal(false);
+  const closeContactModal = () => setShowContactModal(false);
+
+  const userName = session?.user?.name || "DAddy Chard";
+  const userImage =
+    session?.user?.image && session.user.image.trim() !== ""
+      ? session.user.image
+      : null;
+  const userEmail = session?.user?.email;
+
+  // Dropdown callbacks
+  const handleSettings = () => {
+    openAppearanceModal();
+  };
+  const handleDeleteAllChats = () => {
+    console.log("Delete all chats triggered");
+    // Your delete-all-chats logic here.
+    closeMenu();
+  };
+  const handleContactUs = () => {
+    openContactModal();
   };
 
   return (
     <header className="flex items-center justify-between bg-white border-b border-gray-200 px-4 py-2 relative">
-      {/* Left: Infobot Logo & Title */}
-      <div className="flex items-center space-x-0">
+      {/* Left: Infobot Icon & Gradient Text */}
+      <div className="flex items-center space-x-1">
         <Image
           src="/infobot.png"
           alt="Infobot Icon"
@@ -79,9 +64,14 @@ export default function Header() {
           className="rounded"
           priority
         />
-        <span className="text-2xl font-bold bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 bg-clip-text text-transparent">
+        <GradientText
+          colors={["#40ffaa, #4079ff,rgb(238, 55, 255), #4079ff,rgb(217, 64, 255)"]}
+          animationSpeed={8 }
+          showBorder={false}
+          className="text-2xl font-extrabold"
+        >
           Infobot
-        </span>
+        </GradientText>
       </div>
 
       {/* Right: User profile */}
@@ -90,12 +80,11 @@ export default function Header() {
           className="relative flex items-center space-x-2 p-2 rounded-full border border-gray-200 bg-white shadow-sm cursor-pointer"
           onClick={toggleMenu}
         >
-          {/* User avatar */}
           <div className="relative">
-            {session.user.image ? (
+            {userImage ? (
               <Image
-                src={session.user.image}
-                alt={session.user.email || "User Avatar"}
+                src={userImage}
+                alt={userEmail || "User Avatar"}
                 width={40}
                 height={40}
                 className="rounded-full"
@@ -103,16 +92,15 @@ export default function Header() {
             ) : (
               <div className="w-10 h-10 bg-gray-300 rounded-full" />
             )}
-            {/* Online indicator */}
             <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
           </div>
-          <span className="text-sm text-gray-700">{session.user.email}</span>
+          <span className="text-sm text-gray-700">{userEmail}</span>
           <i className="fas fa-chevron-down text-gray-500" />
           {showMenu && (
             <UserDropdownMenu
               isOpen={showMenu}
-              userName={session.user.name || "Unknown"}
-              userImage={session.user.image || null}
+              userName={userName}
+              userImage={userImage}
               onSettings={handleSettings}
               onDeleteAllChats={handleDeleteAllChats}
               onContactUs={handleContactUs}
@@ -124,27 +112,14 @@ export default function Header() {
         <div className="w-8 h-8 bg-gray-300 rounded-full" />
       )}
 
-      {/* Confirm Delete All Chats Modal */}
-      <ConfirmDeleteAllChatsModal
-        isOpen={showConfirmDeleteAll}
-        onConfirm={handleConfirmDeleteAll}
-        onCancel={handleCancelDeleteAll}
-      />
-
-      {/* Appearance Settings Modal */}
       <AppearanceSettingsModal
         isOpen={showAppearanceModal}
-        onClose={handleCloseAppearanceModal}
-        onThemeChange={(theme) => console.log("Theme changed to:", theme)}
-        onFontChange={(font) => console.log("Font changed to:", font)}
-       
+        onClose={closeAppearanceModal}
+        onThemeChange={(theme) => console.log("Theme:", theme)}
+        onFontChange={(font) => console.log("Font:", font)}
       />
 
-      {/* Contact Us Modal */}
-      <ContactUsModal
-        isOpen={showContactModal}
-        onClose={handleCloseContactModal}
-      />
+      <ContactUsModal isOpen={showContactModal} onClose={closeContactModal} />
     </header>
   );
 }

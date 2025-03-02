@@ -105,3 +105,4 @@ export async function fetchBotReply(userInput: string): Promise<string> {
   const data = await response.json();
   return data.output || "Sorry, I didn't understand that.";
 }
+

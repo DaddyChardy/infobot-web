@@ -4,6 +4,7 @@
 import React from "react";
 import { FaTrash } from "react-icons/fa";
 
+
 interface Chat {
   id: string;
   title: string;
@@ -66,5 +67,7 @@ export default function Sidebar({
         )}
       </div>
     </aside>
+    
   );
+
 }
