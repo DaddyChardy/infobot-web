@@ -1,6 +1,4 @@
-// File: src/app/chat/page.tsx
 "use client";
-
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
@@ -47,19 +45,31 @@ function TypingIndicator() {
   );
 }
 
-
-
 export default function ChatPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-
   const [chats, setChats] = useState<Chat[]>([]);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [botTyping, setBotTyping] = useState(false);
-
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Add this to your existing useEffect for handling resize
+useEffect(() => {
+  const handleResize = () => {
+    if (window.innerWidth >= 768) {
+      setIsSidebarOpen(true);
+    } else {
+      setIsSidebarOpen(false);
+    }
+  };
+  
+  window.addEventListener('resize', handleResize);
+  handleResize(); // Initial call
+  return () => window.removeEventListener('resize', handleResize);
+}, []);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -127,13 +137,17 @@ export default function ChatPage() {
       await createChat(userEmail, chatId, "New Chat");
       setCurrentChatId(chatId);
       setMessages([]);
+      if (window.innerWidth < 768) setIsSidebarOpen(false);
     } catch (err) {
       console.error("Error creating chat:", err);
     }
   };
 
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
   const handleSelectChat = (id: string) => {
     setCurrentChatId(id);
+    if (window.innerWidth < 768) setIsSidebarOpen(false);
   };
 
   const handleDeleteChat = async (id: string) => {
@@ -160,7 +174,6 @@ export default function ChatPage() {
   const handleSendMessage = async () => {
     if (!input.trim() || !currentChatId || !session?.user?.email) return;
     const userEmail = session.user.email;
-
     try {
       const currentChat = chats.find((chat) => chat.id === currentChatId);
       if (currentChat && currentChat.title === "New Chat") {
@@ -168,7 +181,6 @@ export default function ChatPage() {
           input.trim().slice(0, 20) + (input.trim().length > 20 ? "..." : "");
         await updateChatTitle(userEmail, currentChatId, updatedTitle);
       }
-
       const userMsg: Message = {
         id: Date.now().toString(),
         content: input.trim(),
@@ -178,7 +190,6 @@ export default function ChatPage() {
       setMessages((prev) => [...prev, userMsg]);
       setInput("");
       setBotTyping(true);
-
       await addMessage(
         userEmail,
         currentChatId,
@@ -187,7 +198,6 @@ export default function ChatPage() {
         userMsg.time,
         session.user.image ?? "/default-image.png"
       );
-
       const botReply = await fetchBotReply(userMsg.content);
       const botMsg: Message = {
         id: Date.now().toString() + "_bot",
@@ -233,20 +243,30 @@ export default function ChatPage() {
       </div>
     );
   }
+
   if (status === "unauthenticated" || !session) {
     return null;
   }
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
-      <Header />
-      <div className="flex flex-1 overflow-hidden">
+      <Header onMenuToggle={toggleSidebar} />
+      <div className="flex flex-1 overflow-hidden relative">
         <Sidebar
           chats={chats}
+          isOpen={isSidebarOpen}
           onNewChat={handleNewChat}
           onSelectChat={handleSelectChat}
           onDeleteChat={handleDeleteChat}
+          onClose={() => setIsSidebarOpen(false)}
         />
+        
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 md:hidden z-40"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
 
         <div className="flex-1 flex flex-col bg-transparent relative">
           {!currentChatId ? (
@@ -316,30 +336,29 @@ export default function ChatPage() {
                         />
                       )}
                       <div
-                        className={`relative max-w-[70%] px-4 py-2 rounded-lg text-sm shadow ${
+                        className={`relative max-w-[90%] md:max-w-[70%] px-4 py-2 rounded-lg text-sm shadow ${
                           isUser
                             ? "bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 text-white rounded-br-none"
-                            : "bg-gray-200 text-gray-800 rounded-bl-none mt-4 "
+                            : "bg-gray-200 text-gray-800 rounded-bl-none mt-4"
                         }`}
                       >
                         {isUser ? (
-  <p>{msg.content}</p>
-) : (
-  <ReactMarkdown
-    components={{
-      a: ({ ...props }) => (
-        <a {...props} className="text-blue-600 uppercase hover:underline" />
-      ),
-      p: ({ ...props }) => <p className="mb-2" {...props} />,
-      ul: ({ ...props }) => <ul className="list-disc list-inside mb-2" {...props} />,
-      ol: ({ ...props }) => <ol className="list-decimal list-inside mb-2" {...props} />,
-      li: ({ ...props }) => <li className="mb-1" {...props} />,
-    }}
-  >
-    {msg.content}
-  </ReactMarkdown>
-)}
-
+                          <p>{msg.content}</p>
+                        ) : (
+                          <ReactMarkdown
+                            components={{
+                              a: ({ ...props }) => (
+                                <a {...props} className="text-blue-600 uppercase hover:underline" />
+                              ),
+                              p: ({ ...props }) => <p className="mb-2" {...props} />,
+                              ul: ({ ...props }) => <ul className="list-disc list-inside mb-2" {...props} />,
+                              ol: ({ ...props }) => <ol className="list-decimal list-inside mb-2" {...props} />,
+                              li: ({ ...props }) => <li className="mb-1" {...props} />,
+                            }}
+                          >
+                            {msg.content}
+                          </ReactMarkdown>
+                        )}
                         <div className="absolute -bottom-5 flex items-center gap-1 text-xs text-gray-500">
                           <span>{formatTime(msg.time)}</span>
                           <button
@@ -387,18 +406,17 @@ export default function ChatPage() {
                       height={32}
                       className="w-8 h-8 mr-2"
                     />
-                    <div className="relative max-w-[70%] px-4 py-2 rounded-lg text-sm shadow bg-gray-200 text-gray-800 rounded-bl-none">
+                    <div className="relative max-w-[90%] md:max-w-[70%] px-4 py-2 rounded-lg text-sm shadow bg-gray-200 text-gray-800 rounded-bl-none">
                       <TypingIndicator />
                     </div>
                   </div>
                 )}
                 <div ref={messagesEndRef} />
               </div>
-
-              <footer className="bg-transparent p-5 flex items-center space-x-5">
+              <footer className="bg-transparent p-4 md:p-5 flex items-center space-x-3 md:space-x-5 px-3">
                 <input
                   type="text"
-                  className="flex-1 px-5 py-2 rounded-full border border-gray-300 focus:outline-none bg-transparent"
+                  className="flex-1 px-4 py-2 text-sm md:text-base rounded-full border border-gray-300 focus:outline-none bg-transparent"
                   placeholder="Ask anything..."
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
@@ -411,7 +429,7 @@ export default function ChatPage() {
                 />
                 <button
                   onClick={handleSendMessage}
-                  className="px-4 py-2 bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 text-white rounded-full hover:from-blue-600 hover:via-blue-700 hover:to-purple-700 transition"
+                  className="px-4 py-2 text-sm md:text-base bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 text-white rounded-full hover:from-blue-600 hover:via-blue-700 hover:to-purple-700 transition"
                 >
                   Send
                 </button>
@@ -421,19 +439,16 @@ export default function ChatPage() {
               </div>
             </>
           )}
-         <FeedbackWidget />
+          <FeedbackWidget />
         </div>
       </div>
     </div>
-    
   );
 }
-
 
 function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString([], {
     hour: "2-digit",
     minute: "2-digit",
   });
-
 }

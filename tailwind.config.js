@@ -17,6 +17,9 @@ module.exports = {
       animation: {
         gradient: "gradient 8s linear infinite",
       },
+      maxWidth: {
+        '4xl': '56rem',
+      },
     },
   },
   plugins: [],
