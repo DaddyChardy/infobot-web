@@ -10,6 +10,7 @@ import {
   serverTimestamp,
   getDocs,
 } from "firebase/firestore";
+import md5 from "blueimp-md5"; // Ensure this import is correct
 
 // Create a new chat under users/{userEmail}/chats/{chatId}
 export async function createChat(
@@ -17,15 +18,19 @@ export async function createChat(
   chatId: string,
   title: string
 ) {
+  const sessionId = md5(userEmail + Date.now()); // Generate unique session ID
+  
   const chatDocRef = doc(db, "users", userEmail, "chats", chatId);
   const chatData = {
     title,
     userId: userEmail,
+    sessionId, // Store session ID with chat
     createdAt: serverTimestamp(),
     lastMessageTime: new Date().toLocaleString(),
   };
+  
   await setDoc(chatDocRef, chatData);
-  return chatData;
+  return { ...chatData, id: chatId }; // Return the sessionId with chat data
 }
 
 // Delete a single chat and its messages
@@ -61,6 +66,7 @@ export async function addMessage(
   content: string,
   sender: "user" | "bot",
   time: string,
+  sessionId: string,
   avatar?: string
 ) {
   const messagesColRef = collection(db, "users", userEmail, "chats", chatId, "messages");
@@ -71,6 +77,7 @@ export async function addMessage(
     createdAt: serverTimestamp(),
     avatar: avatar || (sender === "bot" ? "/infobot.png" : ""),
     userId: sender === "user" ? userEmail : "bot",
+    sessionId
   });
 }
 
@@ -88,14 +95,14 @@ export async function updateChatTitle(
 }
 
 // Fetch bot reply from your webhook
-export async function fetchBotReply(userInput: string): Promise<string> {
+export async function fetchBotReply(userInput: string, sessionId: string): Promise<string> {
   const response = await fetch(
     "https://deped.depedtandagn8n.shop/webhook/5f1c0c82-0ff9-40c7-9e2e-b1a96ffe24cd/chat",
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        sessionId: "test-session",
+        sessionId,
         action: "sendMessage",
         chatInput: userInput,
       }),

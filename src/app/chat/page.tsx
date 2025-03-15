@@ -27,12 +27,14 @@ interface Message {
   content: string;
   sender: "user" | "bot";
   time: string;
+  sessionId: string;
 }
 
 interface Chat {
   id: string;
   title: string;
   lastMessageTime: string;
+  sessionId: string;
 }
 
 function TypingIndicator() {
@@ -50,10 +52,11 @@ export default function ChatPage() {
   const router = useRouter();
   const [chats, setChats] = useState<Chat[]>([]);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [botTyping, setBotTyping] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Add this to your existing useEffect for handling resize
@@ -88,6 +91,7 @@ useEffect(() => {
             id: docSnap.id,
             title: data.title || "New Chat",
             lastMessageTime: data.lastMessageTime || "",
+            sessionId: data.sessionId || "",
           };
         });
         setChats(loadedChats);
@@ -115,6 +119,7 @@ useEffect(() => {
             content: data.text || "",
             sender: data.sender || "bot",
             time: data.time || new Date().toISOString(),
+            sessionId: data.sessionId || "",
           };
         });
         setMessages(loadedMessages);
@@ -133,9 +138,11 @@ useEffect(() => {
     if (!session?.user?.email) return;
     const userEmail = session.user.email;
     const chatId = Date.now().toString();
+    
     try {
-      await createChat(userEmail, chatId, "New Chat");
+      const newChat = await createChat(userEmail, chatId, "New Chat");
       setCurrentChatId(chatId);
+      setCurrentSessionId(newChat.sessionId);
       setMessages([]);
       if (window.innerWidth < 768) setIsSidebarOpen(false);
     } catch (err) {
@@ -146,7 +153,11 @@ useEffect(() => {
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
   const handleSelectChat = (id: string) => {
-    setCurrentChatId(id);
+    const selectedChat = chats.find(chat => chat.id === id);
+    if (selectedChat) {
+      setCurrentChatId(id);
+      setCurrentSessionId(selectedChat.sessionId);
+    }
     if (window.innerWidth < 768) setIsSidebarOpen(false);
   };
 
@@ -173,7 +184,9 @@ useEffect(() => {
 
   const handleSendMessage = async () => {
     if (!input.trim() || !currentChatId || !session?.user?.email) return;
+
     const userEmail = session.user.email;
+
     try {
       const currentChat = chats.find((chat) => chat.id === currentChatId);
       if (currentChat && currentChat.title === "New Chat") {
@@ -181,30 +194,38 @@ useEffect(() => {
           input.trim().slice(0, 20) + (input.trim().length > 20 ? "..." : "");
         await updateChatTitle(userEmail, currentChatId, updatedTitle);
       }
+
       const userMsg: Message = {
         id: Date.now().toString(),
         content: input.trim(),
         sender: "user",
         time: new Date().toISOString(),
+        sessionId: currentSessionId!,
       };
+
       setMessages((prev) => [...prev, userMsg]);
       setInput("");
       setBotTyping(true);
+
       await addMessage(
         userEmail,
         currentChatId,
         userMsg.content,
         userMsg.sender,
         userMsg.time,
+        userMsg.sessionId,
         session.user.image ?? "/default-image.png"
       );
-      const botReply = await fetchBotReply(userMsg.content);
+
+      const botReply = await fetchBotReply(userMsg.content, currentSessionId!);
       const botMsg: Message = {
         id: Date.now().toString() + "_bot",
         content: botReply,
         sender: "bot",
         time: new Date().toISOString(),
+        sessionId: currentSessionId!,
       };
+
       setMessages((prev) => [...prev, botMsg]);
       await addMessage(
         userEmail,
@@ -212,7 +233,8 @@ useEffect(() => {
         botMsg.content,
         botMsg.sender,
         botMsg.time,
-        "/infobot.png"
+        botMsg.sessionId,
+      
       );
     } catch (error) {
       console.error("Error sending message:", error);
@@ -221,6 +243,7 @@ useEffect(() => {
         content: "⚠️ Unable to process your request. Please try again.",
         sender: "bot",
         time: new Date().toISOString(),
+        sessionId: currentSessionId!,
       };
       setMessages((prev) => [...prev, errorMsg]);
       await addMessage(
@@ -229,7 +252,8 @@ useEffect(() => {
         errorMsg.content,
         errorMsg.sender,
         errorMsg.time,
-        "/infobot.png"
+        errorMsg.sessionId,
+        
       );
     } finally {
       setBotTyping(false);
